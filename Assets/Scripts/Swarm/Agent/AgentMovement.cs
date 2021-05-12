@@ -13,8 +13,8 @@ public class AgentMovement : MonoBehaviour
     public Vector2 changeAngleRange;
     
     [Header("Fields")]
-    public float speed;
-    public Vector3 direction;
+    private float speed;
+    private Vector3 direction;
 
     public event OnCollideWithObj onCollideWithObj;
 
@@ -27,21 +27,23 @@ public class AgentMovement : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        direction = -direction;
-
-        if (collision.collider.CompareTag("Obj"))
+        if (collision.collider.CompareTag("Wall"))
+        {
+            direction = -direction;
+        }
+        else //if (collision.collider.CompareTag("Obj"))
         {
             onCollideWithObj?.Invoke(collision.gameObject.GetComponent<ObstacleObject>());
         }
     }
 
-    private void Update()
+    public void Move()
     {
         transform.Translate(direction * speed * Time.deltaTime);
         direction = Quaternion.Euler(0, 0, Random.Range(changeAngleRange.x, changeAngleRange.y)) * direction;
     }
 
-    internal void SetDirectionTo(SwarmAgent otherAgent)
+    public void SetDirectionTo(SwarmAgent otherAgent)
     {
         direction = (otherAgent.transform.position - transform.position).normalized;
 

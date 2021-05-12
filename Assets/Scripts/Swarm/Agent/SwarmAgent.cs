@@ -5,92 +5,71 @@ using UnityEngine;
 public class SwarmAgent : MonoBehaviour
 {
     public AgentMovement movement;
+   
     [Header("Settings")]
-    public float shareDist;
+    [SerializeField] private float shareDist;
 
-    [Header("InGameFields")]
-    public int currEndPt = -1;
-    public PathData[] paths = new PathData[]
-    { 
-        new PathData(0),
-        new PathData(1),
-    };
+    private int currEndPt;
+    private SharedData[] paths;
 
-
-    public PathData CurrPath => paths[currEndPt];
-    public PathData RandomPath => paths[Random.Range(0, paths.Length)];
-
+    public SharedData RandomPath => paths[Random.Range(0, paths.Length)];
 
     private void Awake()
     {
-        movement.onCollideWithObj += UpdateEndLocation;
+        movement.onCollideWithObj += OnReachEndPt;
 
-        StartCoroutine(ShareDataCo());
-    }
-
-    IEnumerator ShareDataCo()
-    {
-        while (true)
+        currEndPt = -1;
+        paths = new SharedData[]
         {
-            yield return new WaitForSeconds(1f);
-
-            for (int i = 0; i < paths.Length; i++)
-            {
-                paths[i].dist += 1;
-            }
-
-            ShareData();
-        }
-       
+            new SharedData(0),
+            new SharedData(1),
+        };
     }
 
-    private void ShareData()
-    {
-        if (currEndPt == -1)
-            return;
-
-        foreach (var agent in Physics2D.OverlapCircleAll(movement.transform.position, shareDist))
-        {
-            agent.GetComponent<SwarmAgent>()?.GetData(this);
-        }
-    }
-
-    private void UpdateEndLocation(ObstacleObject obstacle)
+    private void OnReachEndPt(ObstacleObject obstacle)
     {
         paths[obstacle.ID].dist = 0;
         currEndPt = obstacle.ID == 0 ? 1 : 0;
 
-        ShareData();
+        //ShareData();
     }
 
-    public void GetData(SwarmAgent otherAgent)
+    public void IncreacePathsLength()
     {
-        var path = otherAgent.RandomPath;
+        for (int i = 0; i < paths.Length; i++)
+        {
+            if (paths[i].dist < int.MaxValue)
+                paths[i].dist++;
+        }
+    }
+
+    public void ShareData(ref Collider2D[] colliders)
+    {
+        if (currEndPt == -1)
+            return;
+
+        var collidersCount = Physics2D.OverlapCircle(
+            movement.transform.position, 
+            shareDist, SwarmController.filter, colliders);
+       
+        for (int i = 0; i < collidersCount; i++)
+        {
+            colliders[i].GetComponent<SwarmAgent>()?.RecieveData(this);
+        }
+    }
+
+    public void RecieveData(SwarmAgent otherAgent)
+    {
+        SharedData data = otherAgent.RandomPath;
+        int sharedPathDist = data.dist + (int)shareDist;
 
         if (currEndPt == -1)
-        {
-            currEndPt = path.id;
-            paths[currEndPt].dist = path.dist + (int)shareDist;
-            movement.SetDirectionTo(otherAgent);
-        }
+            currEndPt = data.pathID;
 
-        if (CurrPath.id == path.id && CurrPath.dist > path.dist + (int)shareDist)
+        if (paths[currEndPt].pathID == data.pathID && paths[currEndPt].dist > sharedPathDist)
         {
-            paths[currEndPt].dist = path.dist + (int)shareDist;
+            paths[currEndPt].dist = sharedPathDist;
             movement.SetDirectionTo(otherAgent); 
         }
-    }
-}
-
-[System.Serializable]
-public struct PathData
-{
-    public int id;
-    public int dist;
-
-    public PathData(int id) : this()
-    {
-        this.id = id;
-        dist = int.MaxValue;
     }
 }
