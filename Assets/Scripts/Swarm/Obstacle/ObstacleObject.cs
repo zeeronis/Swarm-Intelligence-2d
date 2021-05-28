@@ -4,5 +4,5 @@ using UnityEngine;
 
 public class ObstacleObject : MonoBehaviour
 {
-    public int ID;
+    [SerializeField] public int ID;
 }

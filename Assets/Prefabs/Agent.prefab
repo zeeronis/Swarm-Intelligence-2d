@@ -49,6 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movement: {fileID: 4242758346334342170}
   shareDist: 5
+  raycastWalls: 0
 --- !u!114 &4242758346334342170
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,9 +64,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   transform: {fileID: 4242758346334342151}
   speedRange: {x: 0.3, y: 1}
-  changeAngleRange: {x: -2, y: 2}
-  speed: 0
-  direction: {x: 0, y: 0, z: 0}
+  changeAngleRange: 5
 --- !u!50 &4242758346334342171
 Rigidbody2D:
   serializedVersion: 4

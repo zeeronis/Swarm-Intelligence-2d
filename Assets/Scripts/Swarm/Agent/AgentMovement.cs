@@ -8,15 +8,15 @@ public class AgentMovement : MonoBehaviour
 {
     public Transform transform;
     
-    [Header("Settings")]
+    [Header("Settings")] //add scriptable object
     public Vector2 speedRange;
-    public Vector2 changeAngleRange;
+    public float changeAngleRange;
     
     [Header("Fields")]
     private float speed;
     private Vector3 direction;
 
-    public event OnCollideWithObj onCollideWithObj;
+    public event OnCollideWithObj OnCollideWithObj;
 
 
     private void Awake()
@@ -33,20 +33,21 @@ public class AgentMovement : MonoBehaviour
         }
         else //if (collision.collider.CompareTag("Obj"))
         {
-            onCollideWithObj?.Invoke(collision.gameObject.GetComponent<ObstacleObject>());
+            direction = -direction;
+            OnCollideWithObj.Invoke(collision.gameObject.GetComponent<ObstacleObject>());
         }
     }
 
     public void Move()
     {
         transform.Translate(direction * speed * Time.deltaTime);
-        direction = Quaternion.Euler(0, 0, Random.Range(changeAngleRange.x, changeAngleRange.y)) * direction;
+        direction = Quaternion.Euler(0, 0, Random.Range(-changeAngleRange, changeAngleRange)) * direction;
     }
 
-    public void SetDirectionTo(SwarmAgent otherAgent)
+    public void SetDirectionTo(AgentController otherAgent)
     {
         direction = (otherAgent.transform.position - transform.position).normalized;
 
-        Debug.DrawLine(transform.position, otherAgent.transform.position, Color.white, 0.05f);
+        Debug.DrawLine(transform.position, otherAgent.transform.position, Color.red, 1f);
     }
 }

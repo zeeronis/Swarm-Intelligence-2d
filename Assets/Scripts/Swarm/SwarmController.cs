@@ -4,22 +4,33 @@ using UnityEngine;
 
 public class SwarmController : MonoBehaviour
 {
-    public static ContactFilter2D filter;
+    public static ContactFilter2D AgentFilter;
+    public static ContactFilter2D WallFilter;
+    public static bool CheckWalls;
 
-    [SerializeField] private SwarmAgent afentPrefab;
-    [Space]
+    [Header("Prefabs")]
+    [SerializeField] private AgentController afentPrefab;
+
+    [Header("Map settings")]
     [SerializeField] private Vector2 mapSize;
+
+    [Header("Agent settings")]
+    [SerializeField] private bool checkWalls;
     [SerializeField] private int agentsCount;
     [SerializeField] private int overlapCollidersCount;
-    [Space]
+
+    [Header("Game settings")]
     [SerializeField] [Range(0, 10)] private float timescale;
 
+
     private Collider2D[] overlapColliders;
-    private List<SwarmAgent> agents = new List<SwarmAgent>();
+    private List<AgentController> agents = new List<AgentController>();
 
 
     private void Awake()
     {
+        CheckWalls = checkWalls;
+
         overlapColliders = new Collider2D[overlapCollidersCount];
         for (int i = 0; i < agentsCount; i++)
         {
@@ -31,10 +42,17 @@ public class SwarmController : MonoBehaviour
             agents.Add(agent);
         }
 
-        filter = new ContactFilter2D()
+        AgentFilter = new ContactFilter2D()
         {
             useLayerMask = true,
             layerMask = 1 << LayerMask.NameToLayer("Agent"),
+            minDepth = -0.01f,
+            maxDepth = 0.01f,
+        };
+        WallFilter = new ContactFilter2D()
+        {
+            useLayerMask = true,
+            layerMask = 1 << LayerMask.NameToLayer("Wall"),
             minDepth = -0.01f,
             maxDepth = 0.01f,
         };

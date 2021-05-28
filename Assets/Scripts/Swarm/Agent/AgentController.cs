@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SwarmAgent : MonoBehaviour
+public class AgentController : MonoBehaviour
 {
     public AgentMovement movement;
    
@@ -16,7 +16,7 @@ public class SwarmAgent : MonoBehaviour
 
     private void Awake()
     {
-        movement.onCollideWithObj += OnReachEndPt;
+        movement.OnCollideWithObj += OnReachEndPt;
 
         currEndPt = -1;
         paths = new SharedData[]
@@ -43,6 +43,7 @@ public class SwarmAgent : MonoBehaviour
         }
     }
 
+    private static RaycastHit2D[] wallRaycast = new RaycastHit2D[1];
     public void ShareData(ref Collider2D[] colliders)
     {
         if (currEndPt == -1)
@@ -50,15 +51,31 @@ public class SwarmAgent : MonoBehaviour
 
         var collidersCount = Physics2D.OverlapCircle(
             movement.transform.position, 
-            shareDist, SwarmController.filter, colliders);
+            shareDist, SwarmController.AgentFilter, colliders);
        
         for (int i = 0; i < collidersCount; i++)
         {
-            colliders[i].GetComponent<SwarmAgent>()?.RecieveData(this);
+            if (SwarmController.CheckWalls)
+            {
+                /*int count = Physics2D.LinecastNonAlloc(
+                    movement.transform.position, 
+                    colliders[i].transform.position, 
+                    wallRaycast, SwarmController.WallFilter.layerMask);*/
+
+                var ss = Physics2D.Linecast(movement.transform.position, colliders[i].transform.position, SwarmController.WallFilter.layerMask);
+                if (ss.collider == null)
+                {
+                    colliders[i].GetComponent<AgentController>().RecieveData(this);
+                }
+            }
+            else
+            {
+                colliders[i].GetComponent<AgentController>().RecieveData(this);
+            }
         }
     }
 
-    public void RecieveData(SwarmAgent otherAgent)
+    public void RecieveData(AgentController otherAgent)
     {
         SharedData data = otherAgent.RandomPath;
         int sharedPathDist = data.dist + (int)shareDist;
